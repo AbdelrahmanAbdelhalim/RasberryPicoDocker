@@ -43,6 +43,3 @@ RUN cd /pico/picoprobe && mkdir /pico/picoprobe/build && cd build && cmake ../ &
 RUN git clone https://github.com/raspberrypi/picotool.git
 RUN cd /pico/picotool && mkdir /pico/picotool/build && cd build && cmake ../ && make -j4 && cd /pico
 RUN cp  -r /pico/picotool /usr/local/bin
-
-# RUN apt install -y minicom
-# RUN raspi-config nonint do_serial 2
