@@ -6,45 +6,43 @@ RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/nul
 RUN echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ focal main' | tee /etc/apt/sources.list.d/kitware.list >/dev/null
 RUN apt-get update
 RUN apt-get install -y cmake
+RUN DEBIAN_FRONTEND=noninteractive apt -y install pkg-config
 RUN apt-get install -y gcc-arm-none-eabi gcc g++
-RUN DEBIAN_FRONTEND=noninteractive apt-get -y install gdb-multiarch automake autoconf build-essential texinfo libtool libftdi-dev libusb-dev
+RUN apt install libnewlib-arm-none-eabi
+RUN DEBIAN_FRONTEND=noninteractive apt install -y gdb-multiarch automake autoconf build-essential texinfo libtool libftdi-dev libusb*
+RUN apt install -y libstdc++-arm-none-eabi-newlib
 RUN apt install -y software-properties-common
 RUN add-apt-repository ppa:deadsnakes/ppa
-RUN apt update
 RUN apt install -y python3.8
-WORKDIR /pico
 
-# Create directories for the tools needed for development on pico
-RUN mkdir pico-sdk
-RUN mkdir pico-examples
-RUN mkdir pico-extras
-RUN mkdir pico-playground
+RUN apt-get update
+RUN apt update
+
+WORKDIR /pico
 
 # Clone development tools in their respective directories
 RUN git clone https://github.com/raspberrypi/pico-sdk.git
+RUN cd /pico/pico-sdk && git submodule update --init && cd /pico
 ENV PICO_SDK_PATH /pico/pico-sdk
-RUN cd pico-sdk && git submodule update --init && cd ..
 RUN git clone https://github.com/raspberrypi/pico-examples.git
-RUN cd pico-examples && git submodule update --init && cd ..
+RUN cd /pico/pico-examples && git submodule update --init && cd /pico
 ENV PICO_EXAMPLES_PATH /pico/pico-examples
 RUN git clone https://github.com/raspberrypi/pico-extras.git
-RUN cd pico-extras && git submodule update --init && cd ..
+RUN cd /pico/pico-extras && git submodule update --init && cd /pico
 ENV PICO_EXTRAS_PATH /pico/pico-extras
 RUN git clone https://github.com/raspberrypi/pico-playground.git
-RUN cd pico-playground && git submodule update --init && cd ..
+RUN cd /pico/pico-playground && git submodule update --init && cd /pico
 ENV PICO_PLAYGROUND_PATH /pico/pico-playground
 
+RUN cd /pico
+
 RUN git clone https://github.com/raspberrypi/picoprobe.git
+RUN cd /pico/picoprobe && mkdir /pico/picoprobe/build && cd build && cmake ../ && make -j4 && cd /pico
+
+
 RUN git clone https://github.com/raspberrypi/picotool.git
+RUN cd /pico/picotool && mkdir /pico/picotool/build && cd build && cmake ../ && make -j4 && cd /pico
+RUN cp  -r /pico/picotool /usr/local/bin
 
-RUN mkdir picoprobe/build
-RUN cmake -B/pico/picoprobe/build -S/pico/picoprobe
-RUN cd /pico/picoprobe/build && make -j4 && cd /pico
-RUN cp picotool -r /usr/local/bin
-
-RUN mkdir picotool/build
-RUN cmake -B/pico/picotool/build -S/pico/picotool
-RUN cd /pico/picotool/build && make -j4 && cd /pico
-RUN make -j4
-
-# cmake -B/path/to/my/build/folder -S/path/to/my/source/folder
+# RUN apt install -y minicom
+# RUN raspi-config nonint do_serial 2
